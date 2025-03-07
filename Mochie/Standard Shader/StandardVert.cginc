@@ -5,10 +5,26 @@
     #include "UnityMetaPass.cginc"
 #endif
 
+#include "StandardVRSL.cginc"
+
 v2f vert (appdata v){
     v2f o = (v2f)0;
     UNITY_SETUP_INSTANCE_ID(v);
     UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
+
+    //VRSL Stuff
+    #if defined(_VRSL_ON) && defined(_VRSLTHIRTEENCHAN_ON)
+    uint dmx = GetDMXChannel();
+    float pan = GetPanValue(dmx) * _EnablePanMovement;
+    float tilt = GetTiltValue(dmx) * _EnableTiltMovement;
+    v.vertex = DMXMovement(v.vertex, v.color, 0, pan, tilt, _FixtureRotationOrigin);
+    v.normal = calculateRotations(float4(v.normal.x, v.normal.y, v.normal.z, 0), v.color, 1, pan, tilt, _FixtureRotationOrigin).xyz;
+    #endif
+    //End VRSL Stuff
+
+    
+
+
     
     #if defined(META_PASS)
         o.pos = UnityMetaVertexPosition(v.vertex, v.uv1.xy, v.uv2.xy, unity_LightmapST, unity_DynamicLightmapST);
@@ -51,6 +67,20 @@ v2f vert (appdata v){
         #endif
         UNITY_TRANSFER_FOG(o,o.pos);
     #endif
+
+    //VRSL Stuff
+    #if _VRSL_ON
+        o.dmxColor = DMXEmission(o.uv0.xy);
+    #endif
+    #if _VRSL_AUDIOLINK_ON
+        o.audioLinkColor = GetAudioLinkEmissionColor().xyz;
+    #endif
+
+    #ifdef _VRSL_GI
+        o.shadowMaskUV = VRSLShadowMaskCoords(v, _VRSLShadowMaskUVSet);
+    #endif
+    //End VRSL Stuff
+
 
     return o;
 }

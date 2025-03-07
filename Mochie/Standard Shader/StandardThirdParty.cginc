@@ -4,8 +4,11 @@
 //--------------
 // AUDIOLINK
 //--------------
-
+#if _VRSL_AUDIOLINK_ON
+#include "Packages/com.llealloo.audiolink/Runtime/Shaders/AudioLink.cginc"
+#else
 Texture2D _AudioTexture;
+#endif
 SamplerState sampler_AudioTexture;
 int _AudioLinkEmission;
 int _AudioLinkEmissionMeta;

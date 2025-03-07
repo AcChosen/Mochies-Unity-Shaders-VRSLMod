@@ -35,10 +35,20 @@ float4 frag (v2f i, bool isFrontFace : SV_IsFrontFace) : SV_Target {
     #if AREALIT_ENABLED
         CalculateAreaLit(i, id, ld);
     #endif
+
+
+
     CalculateBRDF(i, id, ld);
+
+    #if _VRSL_GI
+        CalculateVRSLGI(i, id, i.shadowMaskUV.xy, ld);
+    #endif
+
     ApplyLighting(id, ld);
 
     float4 diffuse = id.diffuse;
+
+
     diffuse.a = id.alpha;
     diffuse.r += defaultSampler.r; // Stopping sampler from getting optimized out
 
@@ -47,6 +57,29 @@ float4 frag (v2f i, bool isFrontFace : SV_IsFrontFace) : SV_Target {
     }
 
     DebugView(i, id, ld, diffuse);
+
+    #if _VRSL_ON
+        float3 emissionMap = SampleTexture(_DMXEmissionMap, i.uv0.xy);
+        switch(_DMXEmissionMapMix)
+        {
+            default:
+            diffuse.rgb += (i.dmxColor * emissionMap);
+                break;
+            case 1:
+            diffuse.rgb += (i.dmxColor + emissionMap);
+                break;
+            case 2:
+            diffuse.rgb = lerp(diffuse.rgb, i.dmxColor, emissionMap.r);
+                break;
+        }
+    #endif
+
+    
+    #if _VRSL_AUDIOLINK_ON
+        float3 audioLinkEmissionMap = SampleTexture(_AudioLinkEmissionMap, i.uv0.xy);
+        diffuse.rgb += (i.audioLinkColor * audioLinkEmissionMap);
+    #endif
+
     
     return diffuse;
 }

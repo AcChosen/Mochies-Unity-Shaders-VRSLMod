@@ -318,6 +318,15 @@ struct v2f {
         UNITY_SHADOW_COORDS(13)
         UNITY_FOG_COORDS(14)
     #endif
+    #if _VRSL_ON
+    nointerpolation float3 dmxColor       : TEXCOORD15;
+    #endif
+    #if _VRSL_AUDIOLINK_ON
+        nointerpolation float3 audioLinkColor       : TEXCOORD16;
+    #endif
+    #ifdef _VRSL_GI
+        float2 shadowMaskUV                    : TEXCOORD17;
+    #endif
     UNITY_VERTEX_INPUT_INSTANCE_ID
     UNITY_VERTEX_OUTPUT_STEREO
 };

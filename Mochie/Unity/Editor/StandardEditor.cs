@@ -20,7 +20,10 @@ public class StandardEditor : ShaderGUI {
 		"AreaLit",
 		"LTCGI",
 		"Lightmap Settings",
-		"Debug"
+		"Debug",
+		"VRSL",
+		"VRSL AudioLink",
+		"VRSL GI"
 	}, 1);
 
 	string versionLabel = "v2.0";
@@ -286,6 +289,90 @@ public class StandardEditor : ShaderGUI {
 	MaterialProperty _ZTest = null;
 	MaterialProperty _DFG = null;
 
+	//VRSL DMX
+	MaterialProperty _VRSLToggle = null;
+	MaterialProperty _DMXChannel = null;
+	MaterialProperty _ThirteenChannelMode = null;
+	MaterialProperty _UseLegacyDMXTextures = null;
+	MaterialProperty _OSCGridRenderTextureRAW = null;
+	MaterialProperty _OSCGridRenderTexture = null;
+	MaterialProperty _OSCGridStrobeTimer = null;
+	MaterialProperty _NineUniverseMode = null;
+	MaterialProperty _DMXEmissionMap = null;
+	MaterialProperty _EmissionDMX = null;
+	MaterialProperty _DMXEmissionMapMix = null;
+	MaterialProperty _UniversalIntensity = null;
+	MaterialProperty _FinalIntensity = null;
+	MaterialProperty _GlobalIntensity = null;
+	MaterialProperty _GlobalIntensityBlend = null;
+	MaterialProperty _FixtureMaxIntensity = null;
+	MaterialProperty _EnableStrobe = null;
+	MaterialProperty _FixtureRotationOrigin = null;
+	MaterialProperty _EnablePanMovement = null;
+	MaterialProperty _MaxMinPanAngle = null;
+	MaterialProperty _FixtureBaseRotationY = null;
+	MaterialProperty _PanInvert = null;
+	MaterialProperty _EnableTiltMovement = null;
+	MaterialProperty _MaxMinTiltAngle = null;
+	MaterialProperty _FixtureRotationX = null;
+	MaterialProperty _TiltInvert = null;
+
+	//VRSL AudioLink
+	MaterialProperty _EnableVRSLAudioLink = null;
+	MaterialProperty _AudioLinkEmissionMap = null;
+	MaterialProperty _Emission = null;
+	MaterialProperty _EnableAudioLink = null;
+	MaterialProperty _Band = null;
+	MaterialProperty _BandMultiplier = null;
+	MaterialProperty _Delay = null;
+	MaterialProperty _EnableColorChord = null;
+	MaterialProperty _EnableColorTextureSample = null;
+	MaterialProperty _SamplingTexture = null;
+	MaterialProperty _TextureColorSampleX = null;
+	MaterialProperty _TextureColorSampleY = null;
+	MaterialProperty _RenderTextureMultiplier = null;
+	MaterialProperty _EnableThemeColorSampling = null;
+	MaterialProperty _ThemeColorTarget = null;
+
+	//VRSL GI
+	MaterialProperty _UseVRSLGI = null;
+	MaterialProperty _UseVRSLGIFoldout = null;
+	MaterialProperty _VRSLGIStrength = null;
+	MaterialProperty _VRSLDiffuseMix = null;
+	MaterialProperty _VRSLGIDiffuseClamp = null;
+	MaterialProperty _VRSLGIIgnoreDirectionalLights = null;
+	MaterialProperty _ClusterDebug = null;
+	MaterialProperty _ClusterDebugFalloff = null;
+	MaterialProperty _UseVRSLGISpecular = null;
+	MaterialProperty _UseOcclussionWithGI = null;
+	MaterialProperty _ShowAdvancedGIFeatures = null;
+	MaterialProperty _VRSLGIRoughnessMult = null;
+	MaterialProperty _VRSLGIRouhgnessInvert = null;
+	MaterialProperty _VRSLGIMetallicMult = null;
+	MaterialProperty _VRSLInvertMetallicMap = null;
+	MaterialProperty _VRSLSpecularMultiplier = null;
+	MaterialProperty _VRSLGISpecularClamp = null;
+	MaterialProperty _VRSLShadowMaskUVSet = null;
+	MaterialProperty _ShadowMaskActiveChannels = null;
+	MaterialProperty _UseVRSLShadowMask1 = null;
+	MaterialProperty _VRSLShadowMask1 = null;
+	MaterialProperty _UseVRSLShadowMask1RStrength = null;
+	MaterialProperty _UseVRSLShadowMask1GStrength = null;
+	MaterialProperty _UseVRSLShadowMask1BStrength = null;
+	MaterialProperty _UseVRSLShadowMask1AStrength = null;
+	MaterialProperty _UseVRSLShadowMask2 = null;
+	MaterialProperty _VRSLShadowMask2 = null;
+	MaterialProperty _UseVRSLShadowMask2RStrength = null;
+	MaterialProperty _UseVRSLShadowMask2GStrength = null;
+	MaterialProperty _UseVRSLShadowMask2BStrength = null;
+	MaterialProperty _UseVRSLShadowMask2AStrength = null;
+	MaterialProperty _UseVRSLShadowMask3 = null;
+	MaterialProperty _VRSLShadowMask3 = null;
+	MaterialProperty _UseVRSLShadowMask3RStrength = null;
+	MaterialProperty _UseVRSLShadowMask3GStrength = null;
+	MaterialProperty _UseVRSLShadowMask3BStrength = null;
+	MaterialProperty _UseVRSLShadowMask3AStrength = null;
+
 	MaterialEditor me;
     BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
 
@@ -337,6 +424,8 @@ public class StandardEditor : ShaderGUI {
 			DoUVs(mat);
 			DoAreaLit(mat);
 			DoLTCGI(mat);
+			DoVRSL(mat,me);
+			DoVRSGIAreaTab(mat,me);
 			DoLightmapSettings(mat);
 			DoRenderSettings(mat);
 			DoDebug(mat);
@@ -910,6 +999,326 @@ public class StandardEditor : ShaderGUI {
 		}
 	}
 
+void DoVRSL(Material material, MaterialEditor me)
+{
+	if (Shader.Find("VRSL/Standard Mover/Volumetric") != null)
+	{
+		bool vrslFoldout = Foldouts.DoSmallFoldoutBold(foldouts, material, me, "VRSL");
+		
+		if(vrslFoldout)
+		{
+			DoVRSLDMX(material,me);
+			MGUI.Space5();
+		}
+		bool vrslAudioLinkFoldout = Foldouts.DoSmallFoldoutBold(foldouts, material, me, "VRSL AudioLink");
+		if(vrslAudioLinkFoldout)
+		{
+			DoVRSLAudioLink(material,me);
+			MGUI.Space5();
+		}
+	}
+	else
+	{
+		_VRSLToggle.floatValue = 0f;
+		material.SetInt("_VRSLToggle", 0);
+		material.SetInt("_EnableVRSLAudioLink", 0);
+		material.SetInt("_EnablePanTiltMovement", 0);
+		material.DisableKeyword("_VRSL_ON");
+		material.DisableKeyword("_VRSLTHIRTEENCHAN_ON");
+		material.DisableKeyword("_VRSLONECHAN_ON");
+		material.DisableKeyword("_VRSLPANTILT_ON");
+		material.DisableKeyword("_VRSL_LEGACY_TEXTURES");
+		material.DisableKeyword("_VRSL_AUDIOLINK_ON");
+	}
+
+}
+
+void DoVRSGIAreaTab(Material material, MaterialEditor me)
+{
+	if (Shader.Find("VRSL/GI-Addon/Standard Shader") != null)
+	{
+		bool vrslGIFoldout = Foldouts.DoSmallFoldoutBold(foldouts, material, me, "VRSL GI");
+		
+		if(vrslGIFoldout)
+		{
+			DoVRSLGIArea(material,me);
+			MGUI.Space5();
+		}
+	}
+	else
+	{	
+		material.SetFloat("_UseVRSLGI", 0f);
+		material.SetFloat("_UseVRSLGISpecular", 0f);
+		material.SetFloat("_ClusterDebug", 0f);
+		material.DisableKeyword("_VRSL_GI");
+		material.DisableKeyword("_VRSL_GI_SPECULARHIGHLIGHTS");
+		material.DisableKeyword("_VRSLGI_BECKMAN");
+		material.DisableKeyword("_VRSLGI_PHONG");
+		material.DisableKeyword("_VRSL_SHADOWMASK1");
+		material.DisableKeyword("_VRSL_SHADOWMASK2");
+		material.DisableKeyword("_VRSL_SHADOWMASK3");
+		material.DisableKeyword("_VRSLGI_CBIRP_DEBUG");
+		material.DisableKeyword("_VRSL_SHADOWMASK_RG");
+		material.DisableKeyword("_VRSL_SHADOWMASK_RGB");
+		material.DisableKeyword("_VRSL_SHADOWMASK_RGBA");
+		material.DisableKeyword("_VRSL_GI_BRDF");
+	}
+}
+	
+
+void DoVRSLDMX(Material material, MaterialEditor me)
+	{
+		MGUI.PropertyGroup(()=>{
+			me.ShaderProperty(_VRSLToggle, "Enable VRSL DMX");
+			MGUI.ToggleGroup(_VRSLToggle.floatValue == 0);
+			MGUI.PropertyGroupLayer(()=>{
+				MGUI.SpaceN2();
+				me.ShaderProperty(_DMXChannel, "DMX Channel");
+				int chanMode = Mathf.FloorToInt(_ThirteenChannelMode.floatValue);
+				chanMode = EditorGUILayout.IntPopup("DMX Mappings",chanMode,new string[]{"5-Channel", "13-Channel","1-Channel", "3-Channel"}, new int[]{0,1,2,3});
+				material.SetInt("_ThirteenChannelMode", chanMode);
+				me.ShaderProperty(_UseLegacyDMXTextures, "Use Legacy VRSL Textures");
+
+				if(_UseLegacyDMXTextures.floatValue == 1)
+				{
+
+					EditorGUI.indentLevel++;
+					me.TexturePropertySingleLine(new GUIContent("DMX Texture For Lights"), _OSCGridRenderTextureRAW);
+					me.TexturePropertySingleLine(new GUIContent("DMX Texture For Movement"), _OSCGridRenderTexture);
+					me.TexturePropertySingleLine(new GUIContent("DMX Texture For Strobe"), _OSCGridStrobeTimer);
+					EditorGUI.indentLevel--;
+				}
+				me.ShaderProperty(_NineUniverseMode, new GUIContent("9-Universe Mode", "Enable/Disable 9-Universe Mode Compatibility"));
+				MGUI.BoldLabel("Emission");
+				MGUI.PropertyGroupLayer(()=>{
+					me.TexturePropertySingleLine(new GUIContent("DMX Emission Map/Mask", "An emission that determins where the DMX Emission will affect the mesh"), _DMXEmissionMap);
+					me.ShaderProperty(_EmissionDMX, "Emission Color");
+					//CheckTrilinear(dmxEmissionMap.textureValue);
+					int mapmix = (int)(_DMXEmissionMapMix.floatValue);
+					mapmix = EditorGUILayout.IntPopup("Emission Map Blending",mapmix,new string[]{"Multiply", "Add", "Replace"}, new int[]{0,1,2});
+					material.SetInt("_DMXEmissionMapMix", mapmix);
+					me.ShaderProperty(_UniversalIntensity, "Universal Intensity");
+					me.ShaderProperty(_FinalIntensity, "Final Intensity");
+					me.ShaderProperty(_GlobalIntensity, "Global Intensity");
+                    EditorGUI.indentLevel++;
+                    me.ShaderProperty(_GlobalIntensityBlend, "Global Intensity Blend");
+                    EditorGUI.indentLevel--;
+					me.ShaderProperty(_FixtureMaxIntensity, "Fixture Max Intensity");
+					me.ShaderProperty(_EnableStrobe, "Enable Strobe");
+				});
+
+				MGUI.BoldLabel("Movement");
+				MGUI.ToggleGroup(material.GetInt("_ThirteenChannelMode") != 1);
+				MGUI.PropertyGroupLayer(()=>{
+					me.ShaderProperty(_FixtureRotationOrigin, "Fixture Pivot/Roptation Origin");
+					me.ShaderProperty(_EnablePanMovement, "Pan");
+					MGUI.ToggleGroup(_EnablePanMovement.floatValue == 0);
+					MGUI.PropertyGroupLayer(()=>{
+						me.ShaderProperty(_MaxMinPanAngle, "Max/Min Pan Angle (-x, x)");
+						me.ShaderProperty(_FixtureBaseRotationY, "Pan Offset");
+						me.ShaderProperty(_PanInvert, "Invert Pan");
+						});
+					MGUI.ToggleGroupEnd();
+					me.ShaderProperty(_EnableTiltMovement, "Tilt");
+					MGUI.ToggleGroup(_EnableTiltMovement.floatValue == 0);
+					MGUI.PropertyGroupLayer(()=>{
+						me.ShaderProperty(_MaxMinTiltAngle, "Max/Min Tilt Angle (-y, y)");
+						me.ShaderProperty(_FixtureRotationX, "Tilt Offset");
+						me.ShaderProperty(_TiltInvert, "Invert Tilt");
+						});
+					});
+					MGUI.ToggleGroupEnd();
+				MGUI.ToggleGroupEnd();
+				MGUI.SpaceN2();
+			});
+		});
+		MGUI.ToggleGroupEnd();
+	}
+        void DoVRSLAudioLink(Material material, MaterialEditor me){
+		MGUI.PropertyGroup(()=>{
+			me.ShaderProperty(_EnableVRSLAudioLink, "Enable VRSL AudioLink");
+			MGUI.ToggleGroup(_EnableVRSLAudioLink.floatValue == 0);
+			MGUI.PropertyGroupLayer(()=>{
+				MGUI.SpaceN2();
+                me.TexturePropertySingleLine(new GUIContent("AudioLink Emission Map/Mask", "AudioLink Emission Map/Mask"), _AudioLinkEmissionMap);
+                me.ShaderProperty(_Emission, "AudioLink Emission Color");
+                me.ShaderProperty(_EnableAudioLink, "Enable AudioLink");
+				me.ShaderProperty(_Band, "Band");
+                me.ShaderProperty(_BandMultiplier,"Band Multiplier");
+				//me.ShaderProperty(_NumBands, "Number Of Bands");
+				me.ShaderProperty(_Delay, "Delay");
+                MGUI.Space8();
+                me.ShaderProperty(_UniversalIntensity, "Universal Intensity");
+                me.ShaderProperty(_FinalIntensity, "Final Intensity");
+                me.ShaderProperty(_GlobalIntensity, "Global Intensity");
+                EditorGUI.indentLevel++;
+                me.ShaderProperty(_GlobalIntensityBlend, "Global Intensity Blend");
+                EditorGUI.indentLevel--;
+                me.ShaderProperty(_FixtureMaxIntensity, "Fixture Max Intensity");
+                
+                MGUI.Space8();
+                me.ShaderProperty(_EnableColorChord, "Enable Color Chord");
+                //Space2();
+                me.ShaderProperty(_EnableColorTextureSample, "Enable Texture Sampling");
+                if(_EnableColorTextureSample.floatValue == 1f)
+                {
+                   EditorGUI.indentLevel++;
+                   me.TexturePropertySingleLine(new GUIContent("Texture To Sample From", "Texture To Sample From"), _SamplingTexture);
+                   me.ShaderProperty(_TextureColorSampleX, "X Coordinate (UV)");
+                   me.ShaderProperty(_TextureColorSampleY, "Y Coordinate (UV)");
+                   me.ShaderProperty(_RenderTextureMultiplier, "Render Texture Multiplier");
+                   EditorGUI.indentLevel--;
+                   MGUI.Space8();
+                }
+                
+                me.ShaderProperty(_EnableThemeColorSampling, "Enable Theme Colors");
+                if(_EnableThemeColorSampling.floatValue == 1f)
+                {
+                   EditorGUI.indentLevel++;
+                   me.ShaderProperty(_ThemeColorTarget, "Theme Color Target");
+                   EditorGUI.indentLevel--;
+                }
+				MGUI.SpaceN2();
+			});
+			MGUI.ToggleGroupEnd();
+		});
+	}
+
+void DoVRSLGIArea(Material material, MaterialEditor m_MaterialEditor)
+{
+	EditorGUILayout.Space(5);
+                //material.SetFloat("useVRSLGI",EditorGUILayout.Toggle("Use VRSL GI",FloatToBool(material.GetFloat("useVRSLGI"))) ? 1.0f : 0.0f);
+                MGUI.PropertyGroup(()=>{
+                //m_MaterialEditor.ShaderProperty(vrslToggle, "Enable");
+                material.SetFloat("_UseVRSLGI",EditorGUILayout.Toggle("Enable VRSL GI",FloatToBool(material.GetFloat("_UseVRSLGI"))) ? 1.0f : 0.0f);
+                MGUI.ToggleGroup(material.GetFloat("_UseVRSLGI") == 0);
+                MGUI.PropertyGroupLayer(()=>{
+					m_MaterialEditor.ShaderProperty(_VRSLGIStrength,"Strength");
+                    m_MaterialEditor.ShaderProperty(_VRSLDiffuseMix,"Albedo Texture Mix");
+					//m_MaterialEditor.ShaderProperty(_VRSLGIDiffuseClamp, "Remove Shadows");
+					m_MaterialEditor.ShaderProperty(_VRSLGIIgnoreDirectionalLights, "Ignore GI Spot/Directional Lights");
+                    m_MaterialEditor.ShaderProperty(_ClusterDebug, "Debug Clustering");
+                    if(_ClusterDebug.floatValue > 0f)
+                    {
+                        EditorGUI.indentLevel++;
+                        m_MaterialEditor.ShaderProperty(_ClusterDebugFalloff, "Falloff Visualizer");
+                        EditorGUI.indentLevel--;
+                    }
+                    MGUI.PropertyGroup(()=>{
+
+                    material.SetFloat("_UseVRSLGISpecular",EditorGUILayout.Toggle("Specular",FloatToBool(material.GetFloat("_UseVRSLGISpecular"))) ? 1.0f : 0.0f);
+                    MGUI.ToggleGroup(material.GetFloat("_UseVRSLGISpecular") == 0);
+                    MGUI.PropertyGroupLayer(()=>{
+					EditorGUI.indentLevel++;
+					_ShowAdvancedGIFeatures.floatValue = EditorGUILayout.Foldout(_ShowAdvancedGIFeatures.floatValue > 0f, "Advanced") ? 1f : 0f;
+
+					if(_ShowAdvancedGIFeatures.floatValue > 0f)
+					{
+						EditorGUI.indentLevel++;
+						m_MaterialEditor.ShaderProperty(_UseOcclussionWithGI, "Use Standard Occlusion Map");
+						m_MaterialEditor.ShaderProperty(_VRSLGIRoughnessMult, "Roughness Multiplier");
+						m_MaterialEditor.ShaderProperty(_VRSLGIRouhgnessInvert, "Invert Roughness");
+						m_MaterialEditor.ShaderProperty(_VRSLGIMetallicMult, "Metallic Multiplier");
+						m_MaterialEditor.ShaderProperty(_VRSLInvertMetallicMap, "Invert Metallic");
+						// m_MaterialEditor.ShaderProperty(_VRSLSpecularShine, "Shine Power");
+						EditorGUI.indentLevel--;
+					}
+					EditorGUI.indentLevel--;
+
+                    EditorGUILayout.Space(4);
+                    
+                    m_MaterialEditor.ShaderProperty(_VRSLSpecularMultiplier,"Specular Strength");
+                   // 
+                    m_MaterialEditor.ShaderProperty(_VRSLGISpecularClamp, "Specular Clamp (Sets Max Brightness)");
+                    });});MGUI.ToggleGroupEnd();
+                    if(material.shader.name.Contains("Project") == false)
+                    {
+                    MGUI.Space8();
+                    MGUI.PropertyGroup(()=>{
+						GUILayout.Label("Shadowmask", EditorStyles.label);
+                        MGUI.PropertyGroup(()=>
+						{
+                        m_MaterialEditor.ShaderProperty(_VRSLShadowMaskUVSet, "UV Set");
+                       // SetVRSLShadowMaskUVKeyword(Mathf.RoundToInt(_VRSLShadowMaskUVSet.floatValue),material);
+                        m_MaterialEditor.ShaderProperty(_ShadowMaskActiveChannels, "Active Channels");
+						//m_MaterialEditor.ShaderProperty(_VRSLGIMaskBrightness, "Mask Brightness");
+                        int activeChannelsSetting = Mathf.RoundToInt(_ShadowMaskActiveChannels.floatValue);
+                        SetVRSLShadowMaskActiveChannelsKeyword(activeChannelsSetting,material);
+                        m_MaterialEditor.ShaderProperty(_UseVRSLShadowMask1, "Use Shadow Mask 1");
+                        MGUI.ToggleGroup(material.GetFloat("_UseVRSLShadowMask1") == 0);
+                        EditorGUI.indentLevel++;
+                        m_MaterialEditor.TexturePropertySingleLine(new GUIContent("Shadow Mask 1"), _VRSLShadowMask1);
+                        m_MaterialEditor.ShaderProperty(_UseVRSLShadowMask1RStrength, "R Strength");
+                        if(activeChannelsSetting > 0)
+                        {
+                            m_MaterialEditor.ShaderProperty(_UseVRSLShadowMask1GStrength, "G Strength");
+                            if(activeChannelsSetting > 1)
+                            {
+                                m_MaterialEditor.ShaderProperty(_UseVRSLShadowMask1BStrength, "B Strength");
+                                if(activeChannelsSetting > 2)
+                                {
+                                    m_MaterialEditor.ShaderProperty(_UseVRSLShadowMask1AStrength, "A Strength");
+                                }
+                            }
+                        }
+                        EditorGUI.indentLevel--;
+                        MGUI.ToggleGroupEnd();
+                        
+                        m_MaterialEditor.ShaderProperty(_UseVRSLShadowMask2, "Use Shadow Mask 2");
+                        MGUI.ToggleGroup(material.GetFloat("_UseVRSLShadowMask2") == 0);
+                        EditorGUI.indentLevel++;
+                        m_MaterialEditor.TexturePropertySingleLine(new GUIContent("Shadow Mask 2"), _VRSLShadowMask2);
+                        m_MaterialEditor.ShaderProperty(_UseVRSLShadowMask2RStrength, "R Strength");
+                        if(activeChannelsSetting > 0)
+                        {
+                            m_MaterialEditor.ShaderProperty(_UseVRSLShadowMask2GStrength, "G Strength");
+                            if(activeChannelsSetting > 1)
+                            {
+                                m_MaterialEditor.ShaderProperty(_UseVRSLShadowMask2BStrength, "B Strength");
+                                if(activeChannelsSetting > 2)
+                                {
+                                    m_MaterialEditor.ShaderProperty(_UseVRSLShadowMask2AStrength, "A Strength");
+                                }
+                            }
+                        }
+                        EditorGUI.indentLevel--;
+                        MGUI.ToggleGroupEnd();
+
+                        m_MaterialEditor.ShaderProperty(_UseVRSLShadowMask3, "Use Shadow Mask 3");
+                        MGUI.ToggleGroup(material.GetFloat("_UseVRSLShadowMask3") == 0);
+                        EditorGUI.indentLevel++;
+                        m_MaterialEditor.TexturePropertySingleLine(new GUIContent("Shadow Mask 3"), _VRSLShadowMask3);
+                        m_MaterialEditor.ShaderProperty(_UseVRSLShadowMask3RStrength, "R Strength");
+                        if(activeChannelsSetting > 0)
+                        {
+                            m_MaterialEditor.ShaderProperty(_UseVRSLShadowMask3GStrength, "G Strength");
+                            if(activeChannelsSetting > 1)
+                            {
+                                m_MaterialEditor.ShaderProperty(_UseVRSLShadowMask3BStrength, "B Strength");
+                                if(activeChannelsSetting > 2)
+                                {
+                                    m_MaterialEditor.ShaderProperty(_UseVRSLShadowMask3AStrength, "A Strength");
+                                }
+                            }
+                        }
+                        EditorGUI.indentLevel--;
+                        MGUI.ToggleGroupEnd();
+					});
+                    });
+                    }MGUI.Space8();
+
+                    EditorGUI.indentLevel--;
+
+                
+                });
+				MGUI.ToggleGroupEnd();
+				});
+				EditorGUI.indentLevel++;
+               // EditorGUILayout.Space(5);
+}
+
+
+
 	void CheckTrilinear(Texture tex) {
 		if(!tex)
 			return;
@@ -1106,7 +1515,94 @@ public class StandardEditor : ShaderGUI {
 		MGUI.SetKeyword(mat, "_BICUBIC_SAMPLING_ON", mat.GetInt("_BicubicSampling") == 1);
 		MGUI.SetKeyword(mat, "_AREALIT_ON", mat.GetInt("_AreaLitToggle") == 1);
 		MGUI.SetKeyword(mat, "LTCGI", mat.GetInt("_LTCGI") == 1);
+		MGUI.SetKeyword(mat, "_VRSL_ON", mat.GetInt("_VRSLToggle") == 1);
+		MGUI.SetKeyword(mat, "_VRSL_LEGACY_TEXTURES", mat.GetInt("_UseLegacyDMXTextures") == 1 && mat.GetInt("_VRSLToggle") == 1);
+		MGUI.SetKeyword(mat, "_VRSLTHIRTEENCHAN_ON", mat.GetInt("_ThirteenChannelMode") == 1 && mat.GetInt("_VRSLToggle") == 1);
+		MGUI.SetKeyword(mat, "_VRSLONECHAN_ON", mat.GetInt("_ThirteenChannelMode") == 2 && mat.GetInt("_VRSLToggle") == 1);
+		MGUI.SetKeyword(mat, "_VRSL_AUDIOLINK_ON", mat.GetInt("_EnableVRSLAudioLink") == 1);
+		MGUI.SetKeyword(mat,"_VRSL_GI", mat.GetFloat("_UseVRSLGI") == 1.0f);
+		MGUI.SetKeyword(mat, "_VRSLGI_CBIRP_DEBUG", mat.GetFloat("_ClusterDebug") == 1.0f);
+		MGUI.SetKeyword(mat, "_VRSL_SHADOWMASK1", mat.GetInt("_UseVRSLShadowMask1") == 1);
+		MGUI.SetKeyword(mat, "_VRSL_SHADOWMASK2", mat.GetInt("_UseVRSLShadowMask2") == 1);
+		MGUI.SetKeyword(mat, "_VRSL_SHADOWMASK3", mat.GetInt("_UseVRSLShadowMask3") == 1);		
+		MGUI.SetKeyword(mat,"_VRSL_GI_SPECULARHIGHLIGHTS", mat.GetFloat("_UseVRSLGISpecular") == 1.0f);
 	}
+
+		bool FloatToBool(float input)
+	{
+		return input == 1.0f;
+	}
+	void SetVRSLShadowMaskUVKeyword(int input, Material material)
+	{
+		switch(input)
+		{
+			case 0:
+				material.EnableKeyword("_VRSL_SHADOWMASK_UV0");
+				material.DisableKeyword("_VRSL_SHADOWMASK_UV1");
+				material.DisableKeyword("_VRSL_SHADOWMASK_UV2");
+				material.DisableKeyword("_VRSL_SHADOWMASK_UV3");
+				material.DisableKeyword("_VRSL_SHADOWMASK_UV4");
+				break;
+			case 1:
+				material.DisableKeyword("_VRSL_SHADOWMASK_UV0");
+				material.EnableKeyword("_VRSL_SHADOWMASK_UV1");
+				material.DisableKeyword("_VRSL_SHADOWMASK_UV2");
+				material.DisableKeyword("_VRSL_SHADOWMASK_UV3");
+				material.DisableKeyword("_VRSL_SHADOWMASK_UV4");
+				break;
+			case 2:
+				material.DisableKeyword("_VRSL_SHADOWMASK_UV0");
+				material.DisableKeyword("_VRSL_SHADOWMASK_UV1");
+				material.EnableKeyword("_VRSL_SHADOWMASK_UV2");
+				material.DisableKeyword("_VRSL_SHADOWMASK_UV3");
+				material.DisableKeyword("_VRSL_SHADOWMASK_UV4");
+				break;
+			case 3:
+				material.DisableKeyword("_VRSL_SHADOWMASK_UV0");
+				material.DisableKeyword("_VRSL_SHADOWMASK_UV1");
+				material.DisableKeyword("_VRSL_SHADOWMASK_UV2");
+				material.EnableKeyword("_VRSL_SHADOWMASK_UV3");
+				material.DisableKeyword("_VRSL_SHADOWMASK_UV4");
+				break;               
+			case 4:
+				material.DisableKeyword("_VRSL_SHADOWMASK_UV0");
+				material.DisableKeyword("_VRSL_SHADOWMASK_UV1");
+				material.DisableKeyword("_VRSL_SHADOWMASK_UV2");
+				material.DisableKeyword("_VRSL_SHADOWMASK_UV3");
+				material.EnableKeyword("_VRSL_SHADOWMASK_UV4");
+				break;
+			default:
+				break;
+		}
+	}
+        void SetVRSLShadowMaskActiveChannelsKeyword(int input, Material material)
+        {
+            switch(input)
+            {
+                case 0:
+                    material.DisableKeyword("_VRSL_SHADOWMASK_RG");
+                    material.DisableKeyword("_VRSL_SHADOWMASK_RGB");
+                    material.DisableKeyword("_VRSL_SHADOWMASK_RGBA");;
+                    break;
+                case 1:
+                    material.EnableKeyword("_VRSL_SHADOWMASK_RG");
+                    material.DisableKeyword("_VRSL_SHADOWMASK_RGB");
+                    material.DisableKeyword("_VRSL_SHADOWMASK_RGBA");
+                    break;
+                case 2:
+                    material.DisableKeyword("_VRSL_SHADOWMASK_RG");
+                    material.EnableKeyword("_VRSL_SHADOWMASK_RGB");
+                    material.DisableKeyword("_VRSL_SHADOWMASK_RGBA");
+                    break;
+                case 3:
+                    material.DisableKeyword("_VRSL_SHADOWMASK_RG");
+                    material.DisableKeyword("_VRSL_SHADOWMASK_RGB");
+                    material.EnableKeyword("_VRSL_SHADOWMASK_RGBA");
+                    break;               
+                default:
+                    break;
+            }
+        }
 
 	public static void SetBlendMode(Material mat){
 		bool ssrToggle = mat.GetInt("_SSRToggle") == 1;
